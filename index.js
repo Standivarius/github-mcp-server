@@ -1,6 +1,12 @@
 import express from 'express';
 import cors from 'cors';
 import { Octokit } from '@octokit/rest';
+import { fileURLToPath } from 'url';
+import { dirname, join } from 'path';
+import { readFileSync } from 'fs';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -151,7 +157,13 @@ app.get('/.well-known/ai-plugin.json', (req, res) => {
 
 // OpenAPI spec endpoint
 app.get('/openapi.json', (req, res) => {
-  res.sendFile(__dirname + '/openapi.json');
+  try {
+    const spec = readFileSync(join(__dirname, 'openapi.json'), 'utf8');
+    res.setHeader('Content-Type', 'application/json');
+    res.send(spec);
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to load OpenAPI spec' });
+  }
 });
 
 // REST endpoints matching OpenAPI spec
