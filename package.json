@@ -1,0 +1,18 @@
+{
+  "name": "github-mcp-server",
+  "version": "1.0.0",
+  "type": "module",
+  "description": "GitHub MCP Server with read/write capabilities",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js"
+  },
+  "dependencies": {
+    "@octokit/rest": "^20.0.2",
+    "express": "^4.18.2",
+    "cors": "^2.8.5"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}
