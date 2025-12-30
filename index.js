@@ -25,14 +25,8 @@ if (!GITHUB_TOKEN) {
 
 const octokit = new Octokit({ auth: GITHUB_TOKEN });
 
-// Simple API key auth middleware
+// Auth disabled for ChatGPT compatibility
 const authenticate = (req, res, next) => {
-  if (MCP_API_KEY) {
-    const authHeader = req.headers.authorization;
-    if (!authHeader || authHeader !== `Bearer ${MCP_API_KEY}`) {
-      return res.status(401).json({ error: 'Unauthorized' });
-    }
-  }
   next();
 };
 
