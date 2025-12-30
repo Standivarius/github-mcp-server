@@ -1,0 +1,210 @@
+{
+  "openapi": "3.0.0",
+  "info": {
+    "title": "GitHub Manager API",
+    "version": "1.0.0",
+    "description": "API for managing GitHub repositories"
+  },
+  "servers": [
+    {
+      "url": "https://github-mcp-server-production-2326.up.railway.app"
+    }
+  ],
+  "paths": {
+    "/repos": {
+      "get": {
+        "operationId": "listRepositories",
+        "summary": "List GitHub repositories",
+        "parameters": [
+          {
+            "name": "visibility",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "enum": ["all", "public", "private"],
+              "default": "all"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "List of repositories",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "type": "object"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/repos/{owner}/{repo}/contents/{path}": {
+      "get": {
+        "operationId": "getFile",
+        "summary": "Get file contents",
+        "parameters": [
+          {
+            "name": "owner",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string" }
+          },
+          {
+            "name": "repo",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string" }
+          },
+          {
+            "name": "path",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string" }
+          },
+          {
+            "name": "branch",
+            "in": "query",
+            "schema": { "type": "string" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "File content"
+          }
+        }
+      },
+      "put": {
+        "operationId": "createOrUpdateFile",
+        "summary": "Create or update a file",
+        "parameters": [
+          {
+            "name": "owner",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string" }
+          },
+          {
+            "name": "repo",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string" }
+          },
+          {
+            "name": "path",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string" }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "content": { "type": "string" },
+                  "message": { "type": "string" },
+                  "branch": { "type": "string" }
+                },
+                "required": ["content", "message"]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "File created/updated"
+          }
+        }
+      }
+    },
+    "/repos/{owner}/{repo}/branches": {
+      "post": {
+        "operationId": "createBranch",
+        "summary": "Create a new branch",
+        "parameters": [
+          {
+            "name": "owner",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string" }
+          },
+          {
+            "name": "repo",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string" }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "branch": { "type": "string" },
+                  "from_branch": { "type": "string" }
+                },
+                "required": ["branch"]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Branch created"
+          }
+        }
+      }
+    },
+    "/repos/{owner}/{repo}/pulls": {
+      "post": {
+        "operationId": "createPullRequest",
+        "summary": "Create a pull request",
+        "parameters": [
+          {
+            "name": "owner",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string" }
+          },
+          {
+            "name": "repo",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string" }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "title": { "type": "string" },
+                  "body": { "type": "string" },
+                  "head": { "type": "string" },
+                  "base": { "type": "string" }
+                },
+                "required": ["title", "head", "base"]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Pull request created"
+          }
+        }
+      }
+    }
+  }
+}

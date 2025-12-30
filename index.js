@@ -124,6 +124,176 @@ app.get('/metadata', authenticate, async (req, res) => {
 });
 
 
+// Plugin manifest endpoint
+app.get('/.well-known/ai-plugin.json', (req, res) => {
+  res.json({
+    schema_version: 'v1',
+    name_for_human: 'GitHub Manager',
+    name_for_model: 'github',
+    description_for_human: 'Manage GitHub repositories: read/write files, create branches, and PRs',
+    description_for_model: 'Plugin for GitHub operations including listing repositories, reading/writing files, creating branches and pull requests.',
+    auth: { type: 'none' },
+    api: {
+      type: 'openapi',
+      url: `https://${req.get('host')}/openapi.json`
+    },
+    logo_url: 'https://github.githubassets.com/images/modules/logos_page/GitHub-Mark.png',
+    contact_email: 'support@example.com',
+    legal_info_url: 'https://example.com/legal'
+  });
+});
+
+// OpenAPI spec endpoint
+app.get('/openapi.json', (req, res) => {
+  res.sendFile(__dirname + '/openapi.json');
+});
+
+// REST endpoints matching OpenAPI spec
+app.get('/repos', authenticate, async (req, res) => {
+  try {
+    const visibility = req.query.visibility || 'all';
+    const repos = await octokit.repos.listForAuthenticatedUser({
+      visibility,
+      sort: 'updated',
+      per_page: 100
+    });
+    res.json(repos.data.map(r => ({
+      name: r.name,
+      full_name: r.full_name,
+      owner: r.owner.login,
+      private: r.private,
+      description: r.description,
+      url: r.html_url,
+      default_branch: r.default_branch
+    })));
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+app.get('/repos/:owner/:repo/contents/*', authenticate, async (req, res) => {
+  try {
+    const { owner, repo } = req.params;
+    const path = req.params[0];
+    const branch = req.query.branch;
+    
+    const file = await octokit.repos.getContent({
+      owner,
+      repo,
+      path,
+      ref: branch
+    });
+    
+    if (Array.isArray(file.data)) {
+      res.status(400).json({ error: 'Path is a directory' });
+    } else {
+      res.json({
+        content: Buffer.from(file.data.content, 'base64').toString('utf-8'),
+        sha: file.data.sha,
+        size: file.data.size,
+        path: file.data.path
+      });
+    }
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+app.put('/repos/:owner/:repo/contents/*', authenticate, async (req, res) => {
+  try {
+    const { owner, repo } = req.params;
+    const path = req.params[0];
+    const { content, message, branch } = req.body;
+    
+    let sha;
+    try {
+      const existing = await octokit.repos.getContent({
+        owner,
+        repo,
+        path,
+        ref: branch
+      });
+      sha = existing.data.sha;
+    } catch (e) {
+      // File doesn't exist
+    }
+
+    const response = await octokit.repos.createOrUpdateFileContents({
+      owner,
+      repo,
+      path,
+      message,
+      content: Buffer.from(content).toString('base64'),
+      branch,
+      sha
+    });
+
+    res.json({
+      success: true,
+      commit: response.data.commit.sha,
+      content: response.data.content
+    });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+app.post('/repos/:owner/:repo/branches', authenticate, async (req, res) => {
+  try {
+    const { owner, repo } = req.params;
+    const { branch, from_branch } = req.body;
+    
+    const repoData = await octokit.repos.get({ owner, repo });
+    const fromBranch = from_branch || repoData.data.default_branch;
+    
+    const ref = await octokit.git.getRef({
+      owner,
+      repo,
+      ref: `heads/${fromBranch}`
+    });
+
+    const newBranch = await octokit.git.createRef({
+      owner,
+      repo,
+      ref: `refs/heads/${branch}`,
+      sha: ref.data.object.sha
+    });
+
+    res.json({
+      success: true,
+      branch,
+      sha: newBranch.data.object.sha
+    });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+app.post('/repos/:owner/:repo/pulls', authenticate, async (req, res) => {
+  try {
+    const { owner, repo } = req.params;
+    const { title, body, head, base } = req.body;
+    
+    const pr = await octokit.pulls.create({
+      owner,
+      repo,
+      title,
+      body: body || '',
+      head,
+      base
+    });
+
+    res.json({
+      success: true,
+      number: pr.data.number,
+      url: pr.data.html_url,
+      state: pr.data.state
+    });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
 // MCP SSE endpoint
 app.get('/sse', authenticate, async (req, res) => {
   res.setHeader('Content-Type', 'text/event-stream');

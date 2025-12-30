@@ -1,0 +1,17 @@
+{
+  "schema_version": "v1",
+  "name_for_human": "GitHub Manager",
+  "name_for_model": "github",
+  "description_for_human": "Manage GitHub repositories: read/write files, create branches, and PRs",
+  "description_for_model": "Plugin for GitHub operations including listing repositories, reading/writing files, creating branches and pull requests. Use when the user wants to interact with their GitHub repositories.",
+  "auth": {
+    "type": "none"
+  },
+  "api": {
+    "type": "openapi",
+    "url": "https://github-mcp-server-production-2326.up.railway.app/openapi.json"
+  },
+  "logo_url": "https://github.githubassets.com/images/modules/logos_page/GitHub-Mark.png",
+  "contact_email": "support@example.com",
+  "legal_info_url": "https://example.com/legal"
+}
