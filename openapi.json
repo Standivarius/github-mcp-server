@@ -43,33 +43,37 @@
         }
       }
     },
-    "/repos/{owner}/{repo}/contents/{path}": {
+    "/file": {
       "get": {
         "operationId": "getFile",
-        "summary": "Get file contents",
+        "summary": "Get file contents from a repository",
         "parameters": [
           {
             "name": "owner",
-            "in": "path",
+            "in": "query",
             "required": true,
-            "schema": { "type": "string" }
+            "schema": { "type": "string" },
+            "description": "Repository owner username"
           },
           {
             "name": "repo",
-            "in": "path",
+            "in": "query",
             "required": true,
-            "schema": { "type": "string" }
+            "schema": { "type": "string" },
+            "description": "Repository name"
           },
           {
             "name": "path",
-            "in": "path",
+            "in": "query",
             "required": true,
-            "schema": { "type": "string" }
+            "schema": { "type": "string" },
+            "description": "File path in the repository"
           },
           {
             "name": "branch",
             "in": "query",
-            "schema": { "type": "string" }
+            "schema": { "type": "string" },
+            "description": "Branch name (optional)"
           }
         ],
         "responses": {
@@ -78,29 +82,9 @@
           }
         }
       },
-      "put": {
+      "post": {
         "operationId": "createOrUpdateFile",
-        "summary": "Create or update a file",
-        "parameters": [
-          {
-            "name": "owner",
-            "in": "path",
-            "required": true,
-            "schema": { "type": "string" }
-          },
-          {
-            "name": "repo",
-            "in": "path",
-            "required": true,
-            "schema": { "type": "string" }
-          },
-          {
-            "name": "path",
-            "in": "path",
-            "required": true,
-            "schema": { "type": "string" }
-          }
-        ],
+        "summary": "Create or update a file in a repository",
         "requestBody": {
           "required": true,
           "content": {
@@ -108,11 +92,14 @@
               "schema": {
                 "type": "object",
                 "properties": {
-                  "content": { "type": "string" },
-                  "message": { "type": "string" },
-                  "branch": { "type": "string" }
+                  "owner": { "type": "string", "description": "Repository owner" },
+                  "repo": { "type": "string", "description": "Repository name" },
+                  "path": { "type": "string", "description": "File path" },
+                  "content": { "type": "string", "description": "File content" },
+                  "message": { "type": "string", "description": "Commit message" },
+                  "branch": { "type": "string", "description": "Branch name (optional)" }
                 },
-                "required": ["content", "message"]
+                "required": ["owner", "repo", "path", "content", "message"]
               }
             }
           }

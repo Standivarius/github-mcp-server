@@ -177,6 +177,78 @@ app.get('/repos', authenticate, async (req, res) => {
   }
 });
 
+app.get('/file', authenticate, async (req, res) => {
+  try {
+    const { owner, repo, path, branch } = req.query;
+    
+    if (!owner || !repo || !path) {
+      return res.status(400).json({ error: 'owner, repo, and path are required' });
+    }
+    
+    const file = await octokit.repos.getContent({
+      owner,
+      repo,
+      path,
+      ref: branch
+    });
+    
+    if (Array.isArray(file.data)) {
+      res.status(400).json({ error: 'Path is a directory' });
+    } else {
+      res.json({
+        content: Buffer.from(file.data.content, 'base64').toString('utf-8'),
+        sha: file.data.sha,
+        size: file.data.size,
+        path: file.data.path
+      });
+    }
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+app.post('/file', authenticate, async (req, res) => {
+  try {
+    const { owner, repo, path, content, message, branch } = req.body;
+    
+    if (!owner || !repo || !path || !content || !message) {
+      return res.status(400).json({ error: 'owner, repo, path, content, and message are required' });
+    }
+    
+    let sha;
+    try {
+      const existing = await octokit.repos.getContent({
+        owner,
+        repo,
+        path,
+        ref: branch
+      });
+      sha = existing.data.sha;
+    } catch (e) {
+      // File doesn't exist
+    }
+
+    const response = await octokit.repos.createOrUpdateFileContents({
+      owner,
+      repo,
+      path,
+      message,
+      content: Buffer.from(content).toString('base64'),
+      branch,
+      sha
+    });
+
+    res.json({
+      success: true,
+      commit: response.data.commit.sha,
+      content: response.data.content
+    });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Keep old endpoints for backward compatibility
 app.get('/repos/:owner/:repo/contents/*', authenticate, async (req, res) => {
   try {
     const { owner, repo } = req.params;
