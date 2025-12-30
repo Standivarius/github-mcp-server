@@ -35,6 +35,95 @@ app.get('/health', (req, res) => {
   res.json({ status: 'ok', timestamp: new Date().toISOString() });
 });
 
+// HTTP metadata endpoint (ChatGPT compatibility)
+app.get('/metadata', authenticate, async (req, res) => {
+  const metadata = {
+    name: 'github-mcp-server',
+    version: '1.0.0',
+    description: 'GitHub operations with read/write access',
+    protocol: 'http',
+    tools: [
+      {
+        name: 'list_repositories',
+        description: 'List all accessible repositories',
+        inputSchema: {
+          type: 'object',
+          properties: {
+            visibility: {
+              type: 'string',
+              enum: ['all', 'public', 'private'],
+              description: 'Filter by visibility'
+            }
+          }
+        }
+      },
+      {
+        name: 'get_file',
+        description: 'Get file contents from a repository',
+        inputSchema: {
+          type: 'object',
+          properties: {
+            owner: { type: 'string', description: 'Repository owner' },
+            repo: { type: 'string', description: 'Repository name' },
+            path: { type: 'string', description: 'File path' },
+            branch: { type: 'string', description: 'Branch name (optional)' }
+          },
+          required: ['owner', 'repo', 'path']
+        }
+      },
+      {
+        name: 'create_or_update_file',
+        description: 'Create or update a file in a repository',
+        inputSchema: {
+          type: 'object',
+          properties: {
+            owner: { type: 'string', description: 'Repository owner' },
+            repo: { type: 'string', description: 'Repository name' },
+            path: { type: 'string', description: 'File path' },
+            content: { type: 'string', description: 'File content' },
+            message: { type: 'string', description: 'Commit message' },
+            branch: { type: 'string', description: 'Branch name (optional)' }
+          },
+          required: ['owner', 'repo', 'path', 'content', 'message']
+        }
+      },
+      {
+        name: 'create_branch',
+        description: 'Create a new branch',
+        inputSchema: {
+          type: 'object',
+          properties: {
+            owner: { type: 'string', description: 'Repository owner' },
+            repo: { type: 'string', description: 'Repository name' },
+            branch: { type: 'string', description: 'New branch name' },
+            from_branch: { type: 'string', description: 'Source branch (optional)' }
+          },
+          required: ['owner', 'repo', 'branch']
+        }
+      },
+      {
+        name: 'create_pull_request',
+        description: 'Create a pull request',
+        inputSchema: {
+          type: 'object',
+          properties: {
+            owner: { type: 'string', description: 'Repository owner' },
+            repo: { type: 'string', description: 'Repository name' },
+            title: { type: 'string', description: 'PR title' },
+            body: { type: 'string', description: 'PR description' },
+            head: { type: 'string', description: 'Source branch' },
+            base: { type: 'string', description: 'Target branch' }
+          },
+          required: ['owner', 'repo', 'title', 'head', 'base']
+        }
+      }
+    ]
+  };
+
+  res.json(metadata);
+});
+
+
 // MCP SSE endpoint
 app.get('/sse', authenticate, async (req, res) => {
   res.setHeader('Content-Type', 'text/event-stream');
