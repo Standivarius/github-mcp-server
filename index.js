@@ -5,7 +5,13 @@ import { Octokit } from '@octokit/rest';
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-app.use(cors());
+// Enhanced CORS for ChatGPT Actions
+app.use(cors({
+  origin: '*',
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization'],
+  credentials: false
+}));
 app.use(express.json());
 
 // Validate environment variables
