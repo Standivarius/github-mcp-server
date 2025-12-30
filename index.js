@@ -12,6 +12,12 @@ app.use(express.json());
 const GITHUB_TOKEN = process.env.GITHUB_TOKEN;
 const MCP_API_KEY = process.env.MCP_API_KEY;
 
+console.log('Environment check:');
+console.log('- GITHUB_TOKEN exists:', !!GITHUB_TOKEN);
+console.log('- GITHUB_TOKEN length:', GITHUB_TOKEN?.length || 0);
+console.log('- MCP_API_KEY exists:', !!MCP_API_KEY);
+console.log('- All env vars:', Object.keys(process.env).filter(k => k.includes('GITHUB') || k.includes('MCP')));
+
 if (!GITHUB_TOKEN) {
   console.error('ERROR: GITHUB_TOKEN environment variable is required');
   process.exit(1);
